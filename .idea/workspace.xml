@@ -56,7 +56,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "Rebasing main",
     "javascript.nodejs.core.library.configured.version": "22.11.0",
     "javascript.nodejs.core.library.typings.version": "22.10.1",
     "last_opened_file_path": "/Users/rexfelix/Desktop/project/web/todo_next/docs",
@@ -106,7 +106,7 @@
       <workItem from="1732960666377" duration="14022000" />
       <workItem from="1733015680216" duration="3025000" />
       <workItem from="1733024872367" duration="1359000" />
-      <workItem from="1733028197346" duration="11740000" />
+      <workItem from="1733028197346" duration="12367000" />
     </task>
     <task id="LOCAL-00001" summary="1차 완성">
       <option name="closed" value="true" />
