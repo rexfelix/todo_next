@@ -1,6 +1,10 @@
+"use client";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
+  const { user, signOut } = useAuth();
+
   return (
     <div className="bg-white dark:bg-gray-900">
       <div className="max-w-md mx-auto px-4">
@@ -20,6 +24,14 @@ export default function Navbar() {
               >
                 대시보드
               </Link>
+              {user && (
+                <button
+                  onClick={signOut}
+                  className="text-gray-100 hover:text-white px-3 py-2 rounded-md hover:bg-purple-500 transition-colors"
+                >
+                  로그아웃
+                </button>
+              )}
             </div>
           </div>
         </nav>
