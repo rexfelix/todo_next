@@ -1,14 +1,28 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import TodoForm from "@/components/TodoForm";
 import TodoList from "@/components/TodoList";
 import { getPriorityStyle } from "@/utils/styles";
 
+// 전역 이벤트를 위한 커스텀 이벤트 생성
+const todoUpdateEvent = new Event('todoUpdate');
+
 export default function Home() {
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedTodos = localStorage.getItem("todos");
+      return savedTodos ? JSON.parse(savedTodos) : [];
+    }
+    return [];
+  });
   const [input, setInput] = useState("");
   const [priority, setPriority] = useState("중간");
+
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+    window.dispatchEvent(todoUpdateEvent);
+  }, [todos]);
 
   const addTodo = () => {
     if (input.trim()) {
