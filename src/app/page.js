@@ -30,7 +30,13 @@ export default function Home() {
   const toggleTodo = (id) => {
     setTodos(
       todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        todo.id === id
+          ? {
+              ...todo,
+              completed: !todo.completed,
+              completedAt: !todo.completed ? Date.now() : null,
+            }
+          : todo
       )
     );
   };
@@ -51,7 +57,9 @@ export default function Home() {
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
 
-  const completedTodos = todos.filter((todo) => todo.completed);
+  const completedTodos = todos
+    .filter((todo) => todo.completed)
+    .sort((a, b) => b.completedAt - a.completedAt);
 
   return (
     <>
