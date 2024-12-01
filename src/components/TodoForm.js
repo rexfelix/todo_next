@@ -12,7 +12,7 @@ export default function TodoForm({
       case "높음":
         return baseClass + "bg-red-500 text-white hover:bg-red-600";
       case "중간":
-        return baseClass + "bg-yellow-500 text-black hover:bg-yellow-600";
+        return baseClass + "bg-green-500 text-black hover:bg-green-600";
       case "낮음":
         return baseClass + "bg-blue-500 text-white hover:bg-blue-600";
       default:

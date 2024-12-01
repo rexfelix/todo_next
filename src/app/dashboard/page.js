@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { supabase } from '@/lib/supabase';
 import Navbar from "@/components/Navbar";
-import Link from "next/link";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -12,37 +12,66 @@ export default function Dashboard() {
     mediumPriority: 0,
     lowPriority: 0,
   });
+  const [loading, setLoading] = useState(true);
 
+  // 통계 데이터 로드 함수
+  const loadStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('todos')
+        .select('*');
+      
+      if (error) throw error;
+
+      // 통계 계산
+      setStats({
+        total: data.length,
+        active: data.filter(todo => !todo.completed).length,
+        completed: data.filter(todo => todo.completed).length,
+        highPriority: data.filter(todo => todo.priority === "높음").length,
+        mediumPriority: data.filter(todo => todo.priority === "중간").length,
+        lowPriority: data.filter(todo => todo.priority === "낮음").length,
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 초기 데이터 로드
   useEffect(() => {
-    // 통계 업데이트 함수
-    const updateStats = () => {
-      try {
-        const todos = JSON.parse(localStorage.getItem("todos") || "[]");
-        
-        setStats({
-          total: todos.length,
-          active: todos.filter(todo => !todo.completed).length,
-          completed: todos.filter(todo => todo.completed).length,
-          highPriority: todos.filter(todo => todo.priority === "높음").length,
-          mediumPriority: todos.filter(todo => todo.priority === "중간").length,
-          lowPriority: todos.filter(todo => todo.priority === "낮음").length,
-        });
-      } catch (error) {
-        console.error("Error updating stats:", error);
-      }
-    };
+    loadStats();
+  }, []);
 
-    // 초기 통계 업데이트
-    updateStats();
+  // Supabase 실시간 구독 설정
+  useEffect(() => {
+    const channel = supabase
+      .channel('todos')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'todos' },
+        () => {
+          // 변경사항이 있을 때마다 통계 다시 로드
+          loadStats();
+        }
+      )
+      .subscribe();
 
-    // todoUpdate 이벤트 리스너 등록
-    window.addEventListener('todoUpdate', updateStats);
-
-    // 컴포넌트 언마운트 시 정리
     return () => {
-      window.removeEventListener('todoUpdate', updateStats);
+      supabase.removeChannel(channel);
     };
   }, []);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="max-w-md mx-auto mt-4 p-6">
+          로딩 중...
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -50,52 +79,59 @@ export default function Dashboard() {
       <div className="max-w-md mx-auto mt-4 p-6">
         <h1 className="text-2xl font-bold mb-6">대시보드</h1>
         
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-purple-600 rounded-lg p-4 text-white">
-            <h2 className="text-lg font-semibold">전체 작업</h2>
-            <p className="text-3xl font-bold">{stats.total}</p>
-          </div>
-          <div className="bg-blue-600 rounded-lg p-4 text-white">
-            <h2 className="text-lg font-semibold">진행중</h2>
-            <p className="text-3xl font-bold">{stats.active}</p>
-          </div>
-          <div className="bg-green-600 rounded-lg p-4 text-white">
-            <h2 className="text-lg font-semibold">완료</h2>
-            <p className="text-3xl font-bold">{stats.completed}</p>
-          </div>
-          <div className="bg-indigo-600 rounded-lg p-4 text-white">
-            <h2 className="text-lg font-semibold">완료율</h2>
-            <p className="text-3xl font-bold">
-              {stats.total ? Math.round((stats.completed / stats.total) * 100) : 0}%
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-4 mb-8">
-          <h2 className="text-lg font-semibold mb-4">우선순위 현황</h2>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span>높음</span>
-              <span className="bg-red-500 px-2 py-1 rounded">{stats.highPriority}</span>
+        {/* 전체 통계 */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">전체 현황</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-gray-600 dark:text-gray-400">전체 할일</p>
+              <p className="text-2xl font-bold">{stats.total}</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span>중간</span>
-              <span className="bg-yellow-500 px-2 py-1 rounded text-black">{stats.mediumPriority}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>낮음</span>
-              <span className="bg-blue-500 px-2 py-1 rounded">{stats.lowPriority}</span>
+            <div>
+              <p className="text-gray-600 dark:text-gray-400">완료율</p>
+              <p className="text-2xl font-bold">
+                {stats.total > 0 
+                  ? Math.round((stats.completed / stats.total) * 100)
+                  : 0}%
+              </p>
             </div>
           </div>
         </div>
 
-        <Link 
-          href="/" 
-          className="inline-block bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors"
-        >
-          할 일 목록으로 돌아가기
-        </Link>
+        {/* 상태별 통계 */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">상태별 현황</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-gray-600 dark:text-gray-400">진행중</p>
+              <p className="text-2xl font-bold">{stats.active}</p>
+            </div>
+            <div>
+              <p className="text-gray-600 dark:text-gray-400">완료</p>
+              <p className="text-2xl font-bold">{stats.completed}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 우선순위별 통계 */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">우선순위별 현황</h2>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-red-600">높음</p>
+              <p className="text-2xl font-bold">{stats.highPriority}</p>
+            </div>
+            <div>
+              <p className="text-yellow-600">중간</p>
+              <p className="text-2xl font-bold">{stats.mediumPriority}</p>
+            </div>
+            <div>
+              <p className="text-blue-600">낮음</p>
+              <p className="text-2xl font-bold">{stats.lowPriority}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
-} 
+}

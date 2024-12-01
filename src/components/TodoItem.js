@@ -1,11 +1,18 @@
-export default function TodoItem({ todo, toggleTodo, changePriority, deleteTodo, getPriorityStyle, isCompleted = false }) {
+export default function TodoItem({
+  todo,
+  toggleTodo,
+  changePriority,
+  deleteTodo,
+  getPriorityStyle,
+  isCompleted = false,
+}) {
   const getPriorityClass = (priority) => {
     const baseClass = "ml-auto p-1 rounded ";
     switch (priority) {
       case "높음":
         return baseClass + "bg-red-500 text-white hover:bg-red-600";
       case "중간":
-        return baseClass + "bg-yellow-500 text-black hover:bg-yellow-600";
+        return baseClass + "bg-green-500 text-black hover:bg-green-600";
       case "낮음":
         return baseClass + "bg-blue-500 text-white hover:bg-blue-600";
       default:
@@ -14,13 +21,17 @@ export default function TodoItem({ todo, toggleTodo, changePriority, deleteTodo,
   };
 
   return (
-    <li className={`flex items-center gap-2 p-2 border rounded ${isCompleted ? 'bg-gray-900' : ''}`}>
+    <li
+      className={`flex items-center gap-2 p-2 border rounded ${
+        isCompleted ? "bg-gray-900" : ""
+      }`}
+    >
       <input
         type="checkbox"
         checked={todo.completed}
         onChange={() => toggleTodo(todo.id)}
       />
-      <span className={isCompleted ? 'line-through text-gray-500' : ''}>
+      <span className={isCompleted ? "line-through text-gray-500" : ""}>
         {todo.text}
       </span>
       {!isCompleted && (
@@ -35,16 +46,11 @@ export default function TodoItem({ todo, toggleTodo, changePriority, deleteTodo,
         </select>
       )}
       {isCompleted && (
-        <span className="text-gray-500 ml-auto">
-          중요도: {todo.priority}
-        </span>
+        <span className="text-gray-500 ml-auto">중요도: {todo.priority}</span>
       )}
-      <button
-        onClick={() => deleteTodo(todo.id)}
-        className="text-red-500 ml-2"
-      >
+      <button onClick={() => deleteTodo(todo.id)} className="text-red-500 ml-2">
         삭제
       </button>
     </li>
   );
-} 
+}
